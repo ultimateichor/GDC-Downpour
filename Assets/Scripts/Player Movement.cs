@@ -4,13 +4,17 @@ using UnityEngine.InputSystem;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Player Movement Settings")]
-    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float maxMoveSpeed = 5f;
     [SerializeField] private float jumpHeight = 10f;
     [SerializeField] private float jumpCutMultiplier = 0.5f;
+    [SerializeField] private float crouchSpeedMultiplier = 0.5f;
+    [SerializeField] private float coyoteTime = 0.2f;
 
+    private float currentMoveSpeed;
     private Vector2 moveInput;
-    [Header("Components")]
-    [SerializeField] private Rigidbody2D rb;
+    private Rigidbody2D rb;
+    private GroundCheck groundCheck;
+    private float coyoteTimeCounter;
 
     private void Start()
     {
@@ -18,6 +22,13 @@ public class PlayerMovement : MonoBehaviour
         {
             rb = GetComponent<Rigidbody2D>();
         }
+        if (groundCheck == null)
+        {
+            groundCheck = GetComponentInChildren<GroundCheck>();
+        }
+
+        currentMoveSpeed = maxMoveSpeed;
+        coyoteTimeCounter = coyoteTime;
     }
 
     private void OnMove(InputValue value)
@@ -34,7 +45,6 @@ public class PlayerMovement : MonoBehaviour
         else if (rb.linearVelocity.y > 0)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * jumpCutMultiplier);
-            Debug.Log("Jump Released");
         }
     }
 
@@ -42,29 +52,46 @@ public class PlayerMovement : MonoBehaviour
     {
         if (value.isPressed)
         {
-            Crouch();
+            Crouch(true);
         }
         else
         {
-            // Implement logic for when crouch is released, if needed
-            Debug.Log("Crouch Released");
+            Crouch(false);
         }
     }
 
     private void Update()
     {
-        rb.linearVelocity = new Vector2(moveInput.x * moveSpeed, rb.linearVelocity.y);
+        rb.linearVelocity = new Vector2(moveInput.x * currentMoveSpeed, rb.linearVelocity.y);
+
+        if (groundCheck.IsGrounded())
+        {
+            coyoteTimeCounter = coyoteTime; // Reset coyote time when grounded
+        }
+        else
+        {
+            coyoteTimeCounter -= Time.deltaTime; // Decrease coyote time when not grounded
+        }
     }
 
     private void Jump()
     {
-        rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpHeight);
-        Debug.Log("Jump Pressed");
+        if (groundCheck.IsGrounded() || coyoteTimeCounter > 0f)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpHeight);
+            coyoteTimeCounter = 0f; // Reset coyote time after jumping
+        }
     }
 
-    private void Crouch()
+    private void Crouch(bool isCrouching)
     {
-        // Implement crouch logic here
-        Debug.Log("Crouch pressed");
+        if (isCrouching)
+        {
+            currentMoveSpeed *= crouchSpeedMultiplier;
+        }
+        else
+        {
+            currentMoveSpeed = maxMoveSpeed;
+        }
     }
 }
