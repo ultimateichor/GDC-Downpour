@@ -4,6 +4,7 @@ public class CameraMovement : MonoBehaviour
 {
     [SerializeField] private float cameraOffsetX = 2f; // Horizontal offset from the player
     [SerializeField] private float cameraOffsetY = 1f; // Vertical offset from the player
+    [SerializeField] private float cameraFollowSpeed = 5f; // Speed at which the camera follows the player
 
     private Transform playerTransform;
     private Vector2 offset;
@@ -19,7 +20,7 @@ public class CameraMovement : MonoBehaviour
         if (playerTransform != null)
         {
             Vector3 offsetPosition = new Vector3(playerTransform.position.x + offset.x, playerTransform.position.y + offset.y, transform.position.z);
-            transform.position = offsetPosition;
+            transform.position = Vector3.Lerp(transform.position, offsetPosition, cameraFollowSpeed * Time.deltaTime);
         }
     }
 }
