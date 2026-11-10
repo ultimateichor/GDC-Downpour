@@ -5,12 +5,16 @@ public class PlayerMovement : MonoBehaviour
 {
     [Header("Player Movement Settings")]
     [SerializeField] private float maxMoveSpeed = 5f;
+    [SerializeField] private float acceleration = 10f;
     [SerializeField] private float jumpHeight = 10f;
     [SerializeField] private float jumpCutMultiplier = 0.5f;
     [SerializeField] private float crouchSpeedMultiplier = 0.5f;
     [SerializeField] private float coyoteTime = 0.2f;
+    [SerializeField] private float knockbackDuration = 0.5f;
+    [Header("Ledge Grab Settings")]
     [SerializeField] private float ledgeGrabDistanceX = 0.5f;
     [SerializeField] private float ledgeGrabDistanceY = 0.5f;
+    [SerializeField] private float ledgeClimbSpeed = 2f;
 
     private float currentMoveSpeed;
     private Vector2 moveInput;
@@ -19,6 +23,7 @@ public class PlayerMovement : MonoBehaviour
     private LedgeCheck ledgeCheck;
     private float coyoteTimeCounter;
     private bool facingRight = true;
+    private bool isKnockedBack = false;
 
     private void Start()
     {
@@ -70,7 +75,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        rb.linearVelocity = new Vector2(moveInput.x * currentMoveSpeed, rb.linearVelocity.y);
+        //rb.linearVelocity = new Vector2(moveInput.x * currentMoveSpeed, rb.linearVelocity.y);
 
         if (moveInput.x != 0)
         {
@@ -101,11 +106,26 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    private void FixedUpdate()
+    {
+        if (!isKnockedBack)
+        {
+            MovePlayer();
+        }
+    }
+
+    private void MovePlayer()
+    {
+        float targetSpeed = moveInput.x * currentMoveSpeed;
+        float speedDifference = targetSpeed - rb.linearVelocity.x;
+        rb.AddForce(new Vector2(speedDifference * rb.mass * acceleration, 0), ForceMode2D.Force);
+    }
+
     private void Jump()
     {
         if (groundCheck.IsGrounded() || coyoteTimeCounter > 0f)
         {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpHeight);
+            rb.AddForce(new Vector2(0, jumpHeight), ForceMode2D.Impulse);
             coyoteTimeCounter = 0f; // Reset coyote time after jumping
         }
     }
@@ -124,7 +144,6 @@ public class PlayerMovement : MonoBehaviour
 
     private void ClimbLedge()
     {
-        Debug.Log("Climbing the ledge!");
         if (!facingRight)
         {
             transform.position = new Vector3(transform.position.x - ledgeGrabDistanceX, transform.position.y + ledgeGrabDistanceY, transform.position.z);
@@ -133,6 +152,24 @@ public class PlayerMovement : MonoBehaviour
         {
             transform.position = new Vector3(transform.position.x + ledgeGrabDistanceX, transform.position.y + ledgeGrabDistanceY, transform.position.z);
         }
+    }
+
+    public void ApplyKnockback(float knockbackForce, Vector2 knockbackDirection)
+    {
+        if (isKnockedBack) return; // Prevent applying knockback if already in knockback state
+        isKnockedBack = true;
+        rb.AddForce(knockbackDirection.normalized * knockbackForce, ForceMode2D.Impulse);
+        Invoke("StopKnockback", knockbackDuration);
+    }
+
+    private void StopKnockback()
+    {
+        isKnockedBack = false;
+    }
+
+    public bool IsFacingRight()
+    {
+        return facingRight;
     }
 
     private void OnDrawGizmosSelected()
@@ -144,7 +181,7 @@ public class PlayerMovement : MonoBehaviour
         }
         if (ledgeCheck != null)
         {
-            Gizmos.color = Color.blue;
+            Gizmos.color = Color.green;
             Gizmos.DrawWireCube(ledgeCheck.transform.position, ledgeCheck.GetComponent<BoxCollider2D>().bounds.size);
             Gizmos.DrawSphere(ledgeCheck.transform.position, ledgeCheck.GetComponent<CircleCollider2D>().radius);
         }

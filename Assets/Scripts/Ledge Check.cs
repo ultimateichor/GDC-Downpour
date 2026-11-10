@@ -5,14 +5,13 @@ public class LedgeCheck : MonoBehaviour
     [SerializeField] private BoxCollider2D wallCollider;
     [SerializeField] private CircleCollider2D ledgeCollider;
     private bool canGrab;
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnTriggerStay2D(Collider2D collision)
     {
         if (collision.CompareTag("Ground") && collision.IsTouching(wallCollider)) return;
 
         if (collision.CompareTag("Ground") && collision.IsTouching(ledgeCollider))
         {
             canGrab = true;
-            Debug.Log("Player can grab the ledge.");
         }
     }
 
@@ -21,7 +20,6 @@ public class LedgeCheck : MonoBehaviour
         if (collision.CompareTag("Ground"))
         {
             canGrab = false;
-            Debug.Log("Player can no longer grab the ledge.");
         }
     }
 
