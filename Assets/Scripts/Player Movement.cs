@@ -8,6 +8,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float acceleration = 10f;
     [SerializeField] private float jumpHeight = 10f;
     [SerializeField] private float jumpCutMultiplier = 0.5f;
+    [SerializeField] private float moveCutMultiplier = 0f;
     [SerializeField] private float crouchSpeedMultiplier = 0.5f;
     [SerializeField] private float coyoteTime = 0.2f;
     [SerializeField] private float knockbackDuration = 0.5f;
@@ -100,7 +101,7 @@ public class PlayerMovement : MonoBehaviour
             coyoteTimeCounter -= Time.deltaTime; // Decrease coyote time when not grounded
         }
 
-        if (ledgeCheck.CanGrabLedge())
+        if (ledgeCheck.CanGrabLedge() && moveInput.x != 0)
         {
             ClimbLedge();
         }
@@ -116,6 +117,12 @@ public class PlayerMovement : MonoBehaviour
 
     private void MovePlayer()
     {
+        if (moveInput.x == 0)
+        {
+            // Apply friction when no input is given
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x * moveCutMultiplier, rb.linearVelocity.y);
+            return;
+        }
         float targetSpeed = moveInput.x * currentMoveSpeed;
         float speedDifference = targetSpeed - rb.linearVelocity.x;
         rb.AddForce(new Vector2(speedDifference * rb.mass * acceleration, 0), ForceMode2D.Force);
