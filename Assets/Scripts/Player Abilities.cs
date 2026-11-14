@@ -6,13 +6,16 @@ public class PlayerAbilities : MonoBehaviour
     [Header("Melee Attack Settings")]
     [SerializeField] private float attackDuration = 0.5f;
     [SerializeField] private float knockbackForce = 5f;
-    [SerializeField] private float attackCooldown = 1f;
+    [SerializeField] private float meleeAttackCooldown = 1f;
 
     private AttackHitbox meleeAttackHitbox;
     private PlayerMovement playerMovement;
-    private float attackCooldownTimer = 0f;
-    private bool isOnCooldown = false;
+    private float meleeAttackCooldownTimer = 0f;
+    private bool isOnMeleeCooldown = false;
+    private bool isOnGunCooldown = false;
     private bool appliedKnockback = false;
+    private LookDirection lookDirection;
+    private PlayerState currentState;
 
     private void Start()
     {
@@ -29,9 +32,17 @@ public class PlayerAbilities : MonoBehaviour
 
     private void OnAttack(InputValue value)
     {
-        if (value.isPressed && !isOnCooldown)
+        if (value.isPressed && !isOnMeleeCooldown)
         {
             MeleeAttack();
+        }
+    }
+
+    private void OnShoot(InputValue value)
+    {
+        if (value.isPressed && !isOnGunCooldown)
+        {
+            GunAttack();
         }
     }
 
@@ -44,20 +55,29 @@ public class PlayerAbilities : MonoBehaviour
             {
                 playerMovement.ApplyKnockback(knockbackForce, Vector2.left);
             }
-            else
+            else //if (LookDirection == lookDirection.Left)
             {
                 playerMovement.ApplyKnockback(knockbackForce, Vector2.right);
             }
+            //else if (LookDirection == lookDirection.Up)
+            //{
+            //    playerMovement.ApplyKnockback(knockbackForce, Vector2.down);
+            //}
+            //else if (LookDirection == lookDirection.Down)
+            //{
+            //    playerMovement.ApplyKnockback(knockbackForce, Vector2.up);
+            //}
             appliedKnockback = true;
+            Debug.Log(lookDirection);
         }
 
-        if (isOnCooldown)
+        if (isOnMeleeCooldown)
         {
-            attackCooldownTimer -= Time.deltaTime;
-            if (attackCooldownTimer <= 0f)
+            meleeAttackCooldownTimer -= Time.deltaTime;
+            if (meleeAttackCooldownTimer <= 0f)
             {
-                isOnCooldown = false;
-                attackCooldownTimer = attackCooldown; // Reset cooldown
+                isOnMeleeCooldown = false;
+                meleeAttackCooldownTimer = meleeAttackCooldown; // Reset cooldown
             }
         }
     }
@@ -65,15 +85,21 @@ public class PlayerAbilities : MonoBehaviour
     private void MeleeAttack()
     {
         meleeAttackHitbox.gameObject.SetActive(true);
-        Invoke("ResetAttack", attackDuration);
+        isOnMeleeCooldown = true;
+        Invoke("ResetMeleeAttack", attackDuration);
     }
 
-    private void ResetAttack()
+    private void GunAttack()
+    {
+        // spawn bullet based on the player's current look direction
+    }
+
+    private void ResetMeleeAttack()
     {
         meleeAttackHitbox.gameObject.SetActive(false);
-        isOnCooldown = true;
         appliedKnockback = false; // Reset knockback application for the next attack
     }
+
 
     private void OnDrawGizmosSelected()
     {

@@ -1,6 +1,30 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+public enum LookDirection
+{
+    Up,
+    Down,
+    Left,
+    Right,
+    UpLeft,
+    UpRight,
+    DownLeft,
+    DownRight,
+}
+
+public enum PlayerState
+{
+    Idle,
+    Walking,
+    Jumping,
+    Falling,
+    Crouching,
+    Attacking,
+    Shooting,
+    Knockback,
+}
+
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Player Movement Settings")]
@@ -25,6 +49,8 @@ public class PlayerMovement : MonoBehaviour
     private float coyoteTimeCounter;
     private bool facingRight = true;
     private bool isKnockedBack = false;
+    private LookDirection lookDirection;
+    private PlayerState currentState;
 
     private void Start()
     {
@@ -48,6 +74,7 @@ public class PlayerMovement : MonoBehaviour
     private void OnMove(InputValue value)
     {
         moveInput = value.Get<Vector2>();
+        SetLookDirection();
     }
 
     private void OnJump(InputValue value)
@@ -64,7 +91,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnCrouch(InputValue value)
     {
-        if (value.isPressed)
+        if (value.isPressed && groundCheck.IsGrounded())
         {
             Crouch(true);
         }
@@ -151,7 +178,7 @@ public class PlayerMovement : MonoBehaviour
 
     private void ClimbLedge()
     {
-        if (!facingRight)
+        if (lookDirection != LookDirection.Right)
         {
             transform.position = new Vector3(transform.position.x - ledgeGrabDistanceX, transform.position.y + ledgeGrabDistanceY, transform.position.z);
         }
@@ -164,6 +191,7 @@ public class PlayerMovement : MonoBehaviour
     public void ApplyKnockback(float knockbackForce, Vector2 knockbackDirection)
     {
         if (isKnockedBack) return; // Prevent applying knockback if already in knockback state
+        rb.linearVelocity = Vector2.zero; // Reset current velocity before applying knockback
         isKnockedBack = true;
         rb.AddForce(knockbackDirection.normalized * knockbackForce, ForceMode2D.Impulse);
         Invoke("StopKnockback", knockbackDuration);
@@ -174,9 +202,74 @@ public class PlayerMovement : MonoBehaviour
         isKnockedBack = false;
     }
 
+    public Vector2 GetMoveInput()
+    {
+        return moveInput;
+    }
+
     public bool IsFacingRight()
     {
         return facingRight;
+    }
+
+    public void SetLookDirection()
+    {
+        switch (moveInput)
+        {
+            case Vector2 v when v.y > 0 && v.x == 0:
+                if (lookDirection != LookDirection.Up)
+                {
+                    lookDirection = LookDirection.Up;
+                }
+                break;
+            case Vector2 v when v.y < 0 && v.x == 0:
+                if (lookDirection != LookDirection.Down)
+                {
+                    lookDirection = LookDirection.Down;
+                }
+                break;
+            case Vector2 v when v.x < 0 && v.y == 0:
+                if (lookDirection != LookDirection.Left)
+                {
+                    lookDirection = LookDirection.Left;
+                }
+                break;
+            case Vector2 v when v.x > 0 && v.y == 0:
+                if (lookDirection != LookDirection.Right)
+                {
+                    lookDirection = LookDirection.Right;
+                }
+                break;
+            case Vector2 v when v.x < 0 && v.y > 0:
+                if (lookDirection != LookDirection.UpLeft)
+                {
+                    lookDirection = LookDirection.UpLeft;
+                }
+                break;
+            case Vector2 v when v.x > 0 && v.y > 0:
+                if (lookDirection != LookDirection.UpRight)
+                {
+                    lookDirection = LookDirection.UpRight;
+                }
+                break;
+            case Vector2 v when v.x < 0 && v.y < 0:
+                if (lookDirection != LookDirection.DownLeft)
+                {
+                    lookDirection = LookDirection.DownLeft;
+                }
+                break;
+            case Vector2 v when v.x > 0 && v.y < 0:
+                if (lookDirection != LookDirection.DownRight)
+                {
+                    lookDirection = LookDirection.DownRight;
+                }
+                break;
+        }
+    }
+
+    public void SetPlayerState(PlayerState state)
+    {
+        currentState = state;
     }
 
     private void OnDrawGizmosSelected()
@@ -184,13 +277,13 @@ public class PlayerMovement : MonoBehaviour
         if (groundCheck != null)
         {
             Gizmos.color = Color.green;
-            Gizmos.DrawWireCube(groundCheck.transform.position, groundCheck.GetComponent<Collider2D>().bounds.size);
+            Gizmos.DrawWireCube(groundCheck.GetComponent<Collider2D>().transform.position * groundCheck.GetComponent<Collider2D>().offset, groundCheck.GetComponent<Collider2D>().bounds.size);
         }
         if (ledgeCheck != null)
         {
             Gizmos.color = Color.green;
-            Gizmos.DrawWireCube(ledgeCheck.transform.position, ledgeCheck.GetComponent<BoxCollider2D>().bounds.size);
-            Gizmos.DrawSphere(ledgeCheck.transform.position, ledgeCheck.GetComponent<CircleCollider2D>().radius);
+            Gizmos.DrawWireCube(ledgeCheck.GetComponent<BoxCollider2D>().transform.position * ledgeCheck.GetComponent<BoxCollider2D>().offset, ledgeCheck.GetComponent<BoxCollider2D>().bounds.size);
+            Gizmos.DrawWireSphere(ledgeCheck.GetComponent<CircleCollider2D>().transform.position * ledgeCheck.GetComponent<CircleCollider2D>().offset, ledgeCheck.GetComponent<CircleCollider2D>().radius);
         }
     }
 }
