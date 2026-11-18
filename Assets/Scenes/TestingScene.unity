@@ -889,7 +889,7 @@ Transform:
   m_GameObject: {fileID: 1282198841}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.13333333, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -909,6 +909,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LedgeCheck
   wallCollider: {fileID: 1282198844}
   ledgeCollider: {fileID: 1282198845}
+  boxColliderRightOffset: {x: 0.4, y: 0.43}
+  boxColliderLeftOffset: {x: -0.4, y: 0.43}
+  circleColliderRightOffset: {x: 0.5, y: 0.325}
+  circleColliderLeftOffset: {x: -0.5, y: 0.325}
 --- !u!61 &1282198844
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -943,7 +947,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.5, y: 0.43}
+  m_Offset: {x: 0.4, y: 0.43}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -989,7 +993,7 @@ CircleCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.55, y: 0.325}
+  m_Offset: {x: 0.5, y: 0.325}
   m_Radius: 0.175
 --- !u!1 &1463171843
 GameObject:
@@ -1351,9 +1355,9 @@ MonoBehaviour:
   crouchSpeedMultiplier: 0.5
   coyoteTime: 0.2
   knockbackDuration: 0.1
-  ledgeGrabDistanceX: 0.15
-  ledgeGrabDistanceY: 0.15
-  ledgeClimbSpeed: 2
+  ledgeGrabDistanceX: 0.75
+  ledgeGrabDistanceY: 1
+  ledgeClimbDuration: 0.1
 --- !u!114 &1913689969
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1369,6 +1373,12 @@ MonoBehaviour:
   attackDuration: 0.3
   knockbackForce: 5
   meleeAttackCooldown: 0.5
+  meleeColliderHorizontalSize: {x: 1.5, y: 0.5}
+  meleeColliderVerticalSize: {x: 1, y: 0.8}
+  meleeColliderRightOffset: {x: 1.25, y: 0}
+  meleeColliderLeftOffset: {x: -1.25, y: 0}
+  meleeColliderUpwardOffset: {x: 0, y: 0.9}
+  meleeColliderDownwardOffset: {x: 0, y: -0.9}
 --- !u!1 &2007405512
 GameObject:
   m_ObjectHideFlags: 0

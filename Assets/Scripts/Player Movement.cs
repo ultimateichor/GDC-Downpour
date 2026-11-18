@@ -39,7 +39,7 @@ public class PlayerMovement : MonoBehaviour
     [Header("Ledge Grab Settings")]
     [SerializeField] private float ledgeGrabDistanceX = 0.5f;
     [SerializeField] private float ledgeGrabDistanceY = 0.5f;
-    [SerializeField] private float ledgeClimbSpeed = 2f;
+    [SerializeField] private float ledgeClimbDuration = 2f;
 
     private float currentMoveSpeed;
     private Vector2 moveInput;
@@ -47,8 +47,10 @@ public class PlayerMovement : MonoBehaviour
     private GroundCheck groundCheck;
     private LedgeCheck ledgeCheck;
     private float coyoteTimeCounter;
-    private bool facingRight = true;
     private bool isKnockedBack = false;
+    private bool isLedgeGrabbing = false;
+    private bool canMove = true;
+    private bool wasMovingRight = true;
     private LookDirection lookDirection;
     private PlayerState currentState;
 
@@ -103,22 +105,6 @@ public class PlayerMovement : MonoBehaviour
 
     private void Update()
     {
-        //rb.linearVelocity = new Vector2(moveInput.x * currentMoveSpeed, rb.linearVelocity.y);
-
-        if (moveInput.x != 0)
-        {
-            if (Mathf.Sign(moveInput.x) == 1 && !facingRight)
-            {
-                transform.localScale = new Vector3(-transform.localScale.x, transform.localScale.y, transform.localScale.z); // Flip the player sprite based on movement direction
-                facingRight = true;
-            }
-            else if (Mathf.Sign(moveInput.x) == -1 && facingRight)
-            {
-                transform.localScale = new Vector3(-transform.localScale.x, transform.localScale.y, transform.localScale.z); // Flip the player sprite based on movement direction
-                facingRight = false;
-            }
-        }
-
         if (groundCheck.IsGrounded())
         {
             coyoteTimeCounter = coyoteTime; // Reset coyote time when grounded
@@ -128,15 +114,16 @@ public class PlayerMovement : MonoBehaviour
             coyoteTimeCounter -= Time.deltaTime; // Decrease coyote time when not grounded
         }
 
-        if (ledgeCheck.CanGrabLedge() && moveInput.x != 0)
+        if ((ledgeCheck.CanGrabLedge()) && (moveInput.x != 0) && (!isLedgeGrabbing))
         {
+            isLedgeGrabbing = true;
             ClimbLedge();
         }
     }
 
     private void FixedUpdate()
     {
-        if (!isKnockedBack)
+        if (!isKnockedBack && canMove)
         {
             MovePlayer();
         }
@@ -178,14 +165,24 @@ public class PlayerMovement : MonoBehaviour
 
     private void ClimbLedge()
     {
-        if (lookDirection != LookDirection.Right)
+        StopPlayerMovement();
+        if (lookDirection == LookDirection.Left || lookDirection == LookDirection.UpLeft || lookDirection == LookDirection.DownLeft)
         {
             transform.position = new Vector3(transform.position.x - ledgeGrabDistanceX, transform.position.y + ledgeGrabDistanceY, transform.position.z);
+            Invoke("ResumePlayerMovement", ledgeClimbDuration);
+            Invoke("StopLedgeGrabbing", ledgeClimbDuration);
         }
-        else
+        else if (lookDirection == LookDirection.Right || lookDirection == LookDirection.UpRight || lookDirection == LookDirection.DownRight)
         {
             transform.position = new Vector3(transform.position.x + ledgeGrabDistanceX, transform.position.y + ledgeGrabDistanceY, transform.position.z);
+            Invoke("ResumePlayerMovement", ledgeClimbDuration);
+            Invoke("StopLedgeGrabbing", ledgeClimbDuration);
         }
+    }
+
+    private void StopLedgeGrabbing()
+    {
+        isLedgeGrabbing = false;
     }
 
     public void ApplyKnockback(float knockbackForce, Vector2 knockbackDirection)
@@ -207,13 +204,21 @@ public class PlayerMovement : MonoBehaviour
         return moveInput;
     }
 
-    public bool IsFacingRight()
-    {
-        return facingRight;
-    }
-
     public void SetLookDirection()
     {
+        if (moveInput == Vector2.zero)
+        {
+            if (wasMovingRight)
+            {
+                lookDirection = LookDirection.Right;
+            }
+            else
+            {
+                lookDirection = LookDirection.Left;
+            }
+            return;
+        }
+
         switch (moveInput)
         {
             case Vector2 v when v.y > 0 && v.x == 0:
@@ -232,12 +237,14 @@ public class PlayerMovement : MonoBehaviour
                 if (lookDirection != LookDirection.Left)
                 {
                     lookDirection = LookDirection.Left;
+                    wasMovingRight = false;
                 }
                 break;
             case Vector2 v when v.x > 0 && v.y == 0:
                 if (lookDirection != LookDirection.Right)
                 {
                     lookDirection = LookDirection.Right;
+                    wasMovingRight = true;
                 }
                 break;
             case Vector2 v when v.x < 0 && v.y > 0:
@@ -267,6 +274,27 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    public void StopPlayerMovement()
+    {
+        canMove = false;
+        rb.linearVelocity = Vector2.zero; // Stop the player's movement immediately
+    }
+
+    public void ResumePlayerMovement()
+    {
+        canMove = true;
+    }
+
+    public LookDirection GetLookDirection()
+    {
+        return lookDirection;
+    }
+
+    public bool WasMovingRight()
+    {
+        return wasMovingRight;
+    }
+
     public void SetPlayerState(PlayerState state)
     {
         currentState = state;
@@ -274,16 +302,16 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        if (groundCheck != null)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireCube(groundCheck.GetComponent<Collider2D>().transform.position * groundCheck.GetComponent<Collider2D>().offset, groundCheck.GetComponent<Collider2D>().bounds.size);
-        }
-        if (ledgeCheck != null)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawWireCube(ledgeCheck.GetComponent<BoxCollider2D>().transform.position * ledgeCheck.GetComponent<BoxCollider2D>().offset, ledgeCheck.GetComponent<BoxCollider2D>().bounds.size);
-            Gizmos.DrawWireSphere(ledgeCheck.GetComponent<CircleCollider2D>().transform.position * ledgeCheck.GetComponent<CircleCollider2D>().offset, ledgeCheck.GetComponent<CircleCollider2D>().radius);
-        }
+        //if (groundCheck != null)
+        //{
+        //    Gizmos.color = Color.green;
+        //    Gizmos.DrawWireCube(groundCheck.GetComponent<Collider2D>().transform.position * groundCheck.GetComponent<Collider2D>().offset, groundCheck.GetComponent<Collider2D>().bounds.size);
+        //}
+        //if (ledgeCheck != null)
+        //{
+        //    Gizmos.color = Color.green;
+        //    Gizmos.DrawWireCube(ledgeCheck.GetComponent<BoxCollider2D>().transform.position * ledgeCheck.GetComponent<BoxCollider2D>().offset, ledgeCheck.GetComponent<BoxCollider2D>().bounds.size);
+        //    Gizmos.DrawWireSphere(ledgeCheck.GetComponent<CircleCollider2D>().transform.position * ledgeCheck.GetComponent<CircleCollider2D>().offset, ledgeCheck.GetComponent<CircleCollider2D>().radius);
+        //}
     }
 }

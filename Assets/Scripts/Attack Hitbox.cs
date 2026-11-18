@@ -29,4 +29,14 @@ public class AttackHitbox : MonoBehaviour
     {
         return hitSomething;
     }
+
+    public void ChangeHitbox(Vector2 newSize, Vector2 newOffset)
+    {
+        BoxCollider2D boxCollider = GetComponent<BoxCollider2D>();
+        if (boxCollider != null)
+        {
+            boxCollider.size = newSize;
+            boxCollider.offset = newOffset;
+        }
+    }
 }

@@ -7,9 +7,16 @@ public class PlayerAbilities : MonoBehaviour
     [SerializeField] private float attackDuration = 0.5f;
     [SerializeField] private float knockbackForce = 5f;
     [SerializeField] private float meleeAttackCooldown = 1f;
+    [SerializeField] private Vector2 meleeColliderHorizontalSize = new Vector2(1.5f, 0.5f);
+    [SerializeField] private Vector2 meleeColliderVerticalSize = new Vector2(0.5f, 1.5f);
+    [SerializeField] private Vector2 meleeColliderRightOffset = new Vector2(1.25f, 0f);
+    [SerializeField] private Vector2 meleeColliderLeftOffset = new Vector2(-1.25f, 0f);
+    [SerializeField] private Vector2 meleeColliderUpwardOffset = new Vector2(0f, 1.5f);
+    [SerializeField] private Vector2 meleeColliderDownwardOffset = new Vector2(0f, -1.5f);
 
     private AttackHitbox meleeAttackHitbox;
     private PlayerMovement playerMovement;
+    private GroundCheck groundCheck;
     private float meleeAttackCooldownTimer = 0f;
     private bool isOnMeleeCooldown = false;
     private bool isOnGunCooldown = false;
@@ -26,6 +33,10 @@ public class PlayerAbilities : MonoBehaviour
         if (playerMovement == null)
         {
             playerMovement = GetComponent<PlayerMovement>();
+        }
+        if (groundCheck == null)
+        {
+            groundCheck = GetComponentInChildren<GroundCheck>();
         }
         meleeAttackHitbox.gameObject.SetActive(false); // Ensure the attack hitbox is initially disabled
     }
@@ -48,27 +59,28 @@ public class PlayerAbilities : MonoBehaviour
 
     private void Update()
     {
+        lookDirection = playerMovement.GetLookDirection();
         // apply knockback if melee attack is successful
         if (meleeAttackHitbox.gameObject.activeSelf && meleeAttackHitbox.IsHittingSomething() && !appliedKnockback)
         {
-            if (playerMovement.IsFacingRight())
+            if (lookDirection == LookDirection.Right || lookDirection == LookDirection.UpRight || lookDirection == LookDirection.DownRight)
             {
                 playerMovement.ApplyKnockback(knockbackForce, Vector2.left);
             }
-            else //if (LookDirection == lookDirection.Left)
+            else if (lookDirection == LookDirection.Left || lookDirection == LookDirection.UpLeft || lookDirection == LookDirection.DownLeft)
             {
                 playerMovement.ApplyKnockback(knockbackForce, Vector2.right);
             }
-            //else if (LookDirection == lookDirection.Up)
-            //{
-            //    playerMovement.ApplyKnockback(knockbackForce, Vector2.down);
-            //}
-            //else if (LookDirection == lookDirection.Down)
-            //{
-            //    playerMovement.ApplyKnockback(knockbackForce, Vector2.up);
-            //}
+            else if (lookDirection == LookDirection.Up)
+            {
+                playerMovement.ApplyKnockback(knockbackForce, Vector2.down);
+            }
+            else if (lookDirection == LookDirection.Down)
+            {
+                playerMovement.ApplyKnockback(knockbackForce, Vector2.up);
+            }
             appliedKnockback = true;
-            Debug.Log(lookDirection);
+            //Debug.Log(lookDirection);
         }
 
         if (isOnMeleeCooldown)
@@ -86,6 +98,39 @@ public class PlayerAbilities : MonoBehaviour
     {
         meleeAttackHitbox.gameObject.SetActive(true);
         isOnMeleeCooldown = true;
+        if (lookDirection == LookDirection.Down && groundCheck.IsGrounded())
+        {
+            if (playerMovement.WasMovingRight())
+            {
+                meleeAttackHitbox.ChangeHitbox(meleeColliderHorizontalSize, meleeColliderRightOffset);
+            }
+            else
+            {
+                meleeAttackHitbox.ChangeHitbox(meleeColliderHorizontalSize, meleeColliderLeftOffset);
+            }
+        }
+        else
+        {
+            switch (lookDirection)
+            {
+                case LookDirection.Right:
+                    meleeAttackHitbox.ChangeHitbox(meleeColliderHorizontalSize, meleeColliderRightOffset);
+                    break;
+                case LookDirection.Left:
+                    meleeAttackHitbox.ChangeHitbox(meleeColliderHorizontalSize, meleeColliderLeftOffset);
+                    break;
+                case LookDirection.Up:
+                case LookDirection.UpRight:
+                case LookDirection.UpLeft:
+                    meleeAttackHitbox.ChangeHitbox(meleeColliderVerticalSize, meleeColliderUpwardOffset);
+                    break;
+                case LookDirection.Down:
+                case LookDirection.DownRight:
+                case LookDirection.DownLeft:
+                    meleeAttackHitbox.ChangeHitbox(meleeColliderVerticalSize, meleeColliderDownwardOffset);
+                    break;
+            }
+        }
         Invoke("ResetMeleeAttack", attackDuration);
     }
 

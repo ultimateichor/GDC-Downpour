@@ -10,7 +10,7 @@ public class BulletScript : MonoBehaviour
     {
         // Set the bullet's velocity based on its speed and direction
         rb = GetComponent<Rigidbody2D>();
-        rb.linearVelocity = transform.right * bulletSpeed;
+        rb.linearVelocity = transform.forward * bulletSpeed;
         // Destroy the bullet after a certain time to prevent it from existing indefinitely
         Destroy(gameObject, bulletLifetime);
     }
