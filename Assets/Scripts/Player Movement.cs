@@ -23,6 +23,7 @@ public enum PlayerState
     Attacking,
     Shooting,
     Knockback,
+    LedgeGrabbing,
 }
 
 public class PlayerMovement : MonoBehaviour
@@ -77,6 +78,14 @@ public class PlayerMovement : MonoBehaviour
     {
         moveInput = value.Get<Vector2>();
         SetLookDirection();
+        if (moveInput == Vector2.zero && currentState == PlayerState.Walking)
+        {
+            SetPlayerState(PlayerState.Idle);
+        }
+        else if ((moveInput != Vector2.zero && groundCheck.IsGrounded()) || currentState == PlayerState.Idle)
+        {
+            SetPlayerState(PlayerState.Walking);
+        }
     }
 
     private void OnJump(InputValue value)
@@ -95,10 +104,12 @@ public class PlayerMovement : MonoBehaviour
     {
         if (value.isPressed && groundCheck.IsGrounded())
         {
+            SetPlayerState(PlayerState.Crouching); // Set player state to crouching
             Crouch(true);
         }
         else
         {
+            SetPlayerState(PlayerState.Idle); // Reset player state to idle when not crouching
             Crouch(false);
         }
     }
@@ -107,15 +118,24 @@ public class PlayerMovement : MonoBehaviour
     {
         if (groundCheck.IsGrounded())
         {
+            if (currentState == PlayerState.Falling)
+            {
+                SetPlayerState(PlayerState.Idle); // Reset player state to idle when grounded
+            }
             coyoteTimeCounter = coyoteTime; // Reset coyote time when grounded
         }
         else
         {
+            if (rb.linearVelocityY < 0 && currentState != PlayerState.Falling)
+            {
+                SetPlayerState(PlayerState.Falling); // Set player state to falling when not grounded
+            }
             coyoteTimeCounter -= Time.deltaTime; // Decrease coyote time when not grounded
         }
 
         if ((ledgeCheck.CanGrabLedge()) && (moveInput.x != 0) && (!isLedgeGrabbing))
         {
+            SetPlayerState(PlayerState.LedgeGrabbing);
             isLedgeGrabbing = true;
             ClimbLedge();
         }
@@ -146,6 +166,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (groundCheck.IsGrounded() || coyoteTimeCounter > 0f)
         {
+            SetPlayerState(PlayerState.Jumping); // Set player state to jumping
             rb.AddForce(new Vector2(0, jumpHeight), ForceMode2D.Impulse);
             coyoteTimeCounter = 0f; // Reset coyote time after jumping
         }
@@ -182,12 +203,14 @@ public class PlayerMovement : MonoBehaviour
 
     private void StopLedgeGrabbing()
     {
+        SetPlayerState(PlayerState.Idle); // Reset player state to idle after ledge climbing
         isLedgeGrabbing = false;
     }
 
     public void ApplyKnockback(float knockbackForce, Vector2 knockbackDirection)
     {
         if (isKnockedBack) return; // Prevent applying knockback if already in knockback state
+        SetPlayerState(PlayerState.Knockback); // Set player state to knockback
         rb.linearVelocity = Vector2.zero; // Reset current velocity before applying knockback
         isKnockedBack = true;
         rb.AddForce(knockbackDirection.normalized * knockbackForce, ForceMode2D.Impulse);
@@ -197,6 +220,7 @@ public class PlayerMovement : MonoBehaviour
     private void StopKnockback()
     {
         isKnockedBack = false;
+        SetPlayerState(PlayerState.Idle); // Reset to idle state after knockback
     }
 
     public Vector2 GetMoveInput()

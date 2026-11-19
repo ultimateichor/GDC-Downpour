@@ -348,6 +348,53 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &464244567
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 464244568}
+  - component: {fileID: 464244569}
+  m_Layer: 0
+  m_Name: BulletSpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &464244568
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 464244567}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.8, y: 0.25, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1913689964}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &464244569
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 464244567}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19ae6c42eb0454e4fa7a48739504ef88, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerBulletSpawnpoint
+  bulletPrefab: {fileID: 5318927354371255697, guid: 46b325f2a322a124899e22beaa271d08, type: 3}
+  defaultPoolCapacity: 5
+  maxPoolCapacity: 10
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -1230,6 +1277,7 @@ Transform:
   - {fileID: 12139810}
   - {fileID: 1282198842}
   - {fileID: 2007405513}
+  - {fileID: 464244568}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!50 &1913689965
@@ -1379,6 +1427,20 @@ MonoBehaviour:
   meleeColliderLeftOffset: {x: -1.25, y: 0}
   meleeColliderUpwardOffset: {x: 0, y: 0.9}
   meleeColliderDownwardOffset: {x: 0, y: -0.9}
+  gunAttackCooldown: 0.5
+  bulletSpeed: 10
+  gunSpawnRightOffset: {x: 0.8, y: 0.25}
+  gunSpawnLeftOffset: {x: -0.8, y: 0.25}
+  gunSpawnUpOffset: {x: 0, y: 0.6}
+  gunSpawnDownOffset: {x: 0, y: -0.6}
+  gunSpawnRightRotation: {x: 0, y: 0, z: 0, w: 0}
+  gunSpawnUpRightRotation: {x: 0, y: 0, z: 0.38268346, w: 0.9238795}
+  gunSpawnDownRightRotation: {x: 0, y: 0, z: -0.38268346, w: 0.9238795}
+  gunSpawnLeftRotation: {x: 0, y: 0, z: 180, w: 0}
+  gunSpawnUpLeftRotation: {x: 0, y: 0, z: 0.9238795, w: 0.38268343}
+  gunSpawnDownLeftRotation: {x: 0, y: 0, z: -0.9238795, w: 0.38268343}
+  gunSpawnUpRotation: {x: 0, y: 0, z: 0.70710677, w: 0.70710677}
+  gunSpawnDownRotation: {x: 0, y: 0, z: -0.70710677, w: 0.70710677}
 --- !u!1 &2007405512
 GameObject:
   m_ObjectHideFlags: 0

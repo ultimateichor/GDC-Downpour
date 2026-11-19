@@ -14,10 +14,28 @@ public class PlayerAbilities : MonoBehaviour
     [SerializeField] private Vector2 meleeColliderUpwardOffset = new Vector2(0f, 1.5f);
     [SerializeField] private Vector2 meleeColliderDownwardOffset = new Vector2(0f, -1.5f);
 
+    [Header("Gun Attack Settings")]
+    [SerializeField] private float gunAttackCooldown = 0.5f;
+    [SerializeField] private float bulletSpeed = 10f;
+    [SerializeField] private Vector2 gunSpawnRightOffset = new Vector2(1.25f, 0f);
+    [SerializeField] private Vector2 gunSpawnLeftOffset = new Vector2(-1.25f, 0f);
+    [SerializeField] private Vector2 gunSpawnUpOffset = new Vector2(0f, 1.5f);
+    [SerializeField] private Vector2 gunSpawnDownOffset = new Vector2(0f, -1.5f);
+    [SerializeField] private Quaternion gunSpawnRightRotation = new Quaternion(0, 0, 0, 0);
+    [SerializeField] private Quaternion gunSpawnUpRightRotation = new Quaternion(0, 0, 45, 0);
+    [SerializeField] private Quaternion gunSpawnDownRightRotation = new Quaternion(0, 0, -45, 0);
+    [SerializeField] private Quaternion gunSpawnLeftRotation = new Quaternion(0, 0, 180, 0);
+    [SerializeField] private Quaternion gunSpawnUpLeftRotation = new Quaternion(0, 0, 135, 0);
+    [SerializeField] private Quaternion gunSpawnDownLeftRotation = new Quaternion(0, 0, -135, 0);
+    [SerializeField] private Quaternion gunSpawnUpRotation = new Quaternion(0, 0, 90, 0);
+    [SerializeField] private Quaternion gunSpawnDownRotation = new Quaternion(0, 0, -90, 0);
+
     private AttackHitbox meleeAttackHitbox;
     private PlayerMovement playerMovement;
     private GroundCheck groundCheck;
+    private PlayerBulletSpawnpoint bulletSpawnpoint;
     private float meleeAttackCooldownTimer = 0f;
+    private float gunAttackCooldownTimer = 0f;
     private bool isOnMeleeCooldown = false;
     private bool isOnGunCooldown = false;
     private bool appliedKnockback = false;
@@ -37,6 +55,10 @@ public class PlayerAbilities : MonoBehaviour
         if (groundCheck == null)
         {
             groundCheck = GetComponentInChildren<GroundCheck>();
+        }
+        if (bulletSpawnpoint == null)
+        {
+            bulletSpawnpoint = GetComponentInChildren<PlayerBulletSpawnpoint>();
         }
         meleeAttackHitbox.gameObject.SetActive(false); // Ensure the attack hitbox is initially disabled
     }
@@ -92,10 +114,21 @@ public class PlayerAbilities : MonoBehaviour
                 meleeAttackCooldownTimer = meleeAttackCooldown; // Reset cooldown
             }
         }
+        if (isOnGunCooldown)
+        {
+            gunAttackCooldownTimer -= Time.deltaTime;
+            if (gunAttackCooldownTimer <= 0f)
+            {
+                isOnGunCooldown = false;
+                gunAttackCooldownTimer = gunAttackCooldown; // Reset cooldown
+            }
+        }
     }
 
     private void MeleeAttack()
     {
+        if (isOnMeleeCooldown) return;
+        playerMovement.SetPlayerState(PlayerState.Attacking); // Set player state to attacking
         meleeAttackHitbox.gameObject.SetActive(true);
         isOnMeleeCooldown = true;
         if (lookDirection == LookDirection.Down && groundCheck.IsGrounded())
@@ -136,12 +169,64 @@ public class PlayerAbilities : MonoBehaviour
 
     private void GunAttack()
     {
-        // spawn bullet based on the player's current look direction
+        if (isOnGunCooldown) return;
+        playerMovement.SetPlayerState(PlayerState.Shooting); // Set player state to attacking
+        isOnGunCooldown = true;
+        if (lookDirection == LookDirection.Down && groundCheck.IsGrounded())
+        {
+            if (playerMovement.WasMovingRight())
+            {
+                bulletSpawnpoint.ChangeSpawn(gunSpawnRightOffset, gunSpawnRightRotation);
+            }
+            else
+            {
+                bulletSpawnpoint.ChangeSpawn(gunSpawnLeftOffset, gunSpawnLeftRotation);
+            }
+        }
+        else
+        {
+            switch (lookDirection)
+            {
+                case LookDirection.Right:
+                    bulletSpawnpoint.ChangeSpawn(gunSpawnRightOffset, gunSpawnRightRotation);
+                    break;
+                case LookDirection.Left:
+                    bulletSpawnpoint.ChangeSpawn(gunSpawnLeftOffset, gunSpawnLeftRotation);
+                    break;
+                case LookDirection.Up:
+                    bulletSpawnpoint.ChangeSpawn(gunSpawnUpOffset, gunSpawnUpRotation);
+                    break;
+                case LookDirection.UpRight:
+                    bulletSpawnpoint.ChangeSpawn(gunSpawnRightOffset, gunSpawnUpRightRotation);
+                    break;
+                case LookDirection.UpLeft:
+                    bulletSpawnpoint.ChangeSpawn(gunSpawnLeftOffset, gunSpawnUpLeftRotation);
+                    break;
+                case LookDirection.Down:
+                    bulletSpawnpoint.ChangeSpawn(gunSpawnDownOffset, gunSpawnDownRotation);
+                    break;
+                case LookDirection.DownRight:
+                    bulletSpawnpoint.ChangeSpawn(gunSpawnRightOffset, gunSpawnDownRightRotation);
+                    break;
+                case LookDirection.DownLeft:
+                    bulletSpawnpoint.ChangeSpawn(gunSpawnLeftOffset, gunSpawnDownLeftRotation);
+                    break;
+            }
+        }
+        bulletSpawnpoint.SpawnBullet(bulletSpeed); // Shoot bullet in the direction the player is looking
+        Invoke("ResetGunAttack", gunAttackCooldown);
     }
 
     private void ResetMeleeAttack()
     {
+        playerMovement.SetPlayerState(PlayerState.Idle); // Reset player state to idle after attack
         meleeAttackHitbox.gameObject.SetActive(false);
+        appliedKnockback = false; // Reset knockback application for the next attack
+    }
+
+    private void ResetGunAttack()
+    {
+        playerMovement.SetPlayerState(PlayerState.Idle); // Reset player state to idle after attack
         appliedKnockback = false; // Reset knockback application for the next attack
     }
 
