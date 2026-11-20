@@ -67,4 +67,10 @@ public class BulletScript : MonoBehaviour
     {
         bulletSpeed = newSpeed;
     }
+
+    public void SetBulletSpawn(Vector2 point, Quaternion rotation)
+    {
+        transform.position = point;
+        transform.rotation = rotation;
+    }
 }

@@ -1,4 +1,6 @@
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 public class PlayerAbilities : MonoBehaviour
@@ -17,6 +19,7 @@ public class PlayerAbilities : MonoBehaviour
     [Header("Gun Attack Settings")]
     [SerializeField] private float gunAttackCooldown = 0.5f;
     [SerializeField] private float bulletSpeed = 10f;
+    [SerializeField] private int maxAmmoCount = 10;
     [SerializeField] private Vector2 gunSpawnRightOffset = new Vector2(1.25f, 0f);
     [SerializeField] private Vector2 gunSpawnLeftOffset = new Vector2(-1.25f, 0f);
     [SerializeField] private Vector2 gunSpawnUpOffset = new Vector2(0f, 1.5f);
@@ -39,8 +42,10 @@ public class PlayerAbilities : MonoBehaviour
     private bool isOnMeleeCooldown = false;
     private bool isOnGunCooldown = false;
     private bool appliedKnockback = false;
+    private int currentAmmoCount;
     private LookDirection lookDirection;
     private PlayerState currentState;
+    public UnityEvent<int> UpdateAmmo;
 
     private void Start()
     {
@@ -61,6 +66,8 @@ public class PlayerAbilities : MonoBehaviour
             bulletSpawnpoint = GetComponentInChildren<PlayerBulletSpawnpoint>();
         }
         meleeAttackHitbox.gameObject.SetActive(false); // Ensure the attack hitbox is initially disabled
+        currentAmmoCount = maxAmmoCount;
+        UpdateAmmo.Invoke(currentAmmoCount);
     }
 
     private void OnAttack(InputValue value)
@@ -73,7 +80,7 @@ public class PlayerAbilities : MonoBehaviour
 
     private void OnShoot(InputValue value)
     {
-        if (value.isPressed && !isOnGunCooldown)
+        if (value.isPressed && !isOnGunCooldown && (currentAmmoCount > 0))
         {
             GunAttack();
         }
@@ -214,6 +221,8 @@ public class PlayerAbilities : MonoBehaviour
             }
         }
         bulletSpawnpoint.SpawnBullet(bulletSpeed); // Shoot bullet in the direction the player is looking
+        currentAmmoCount--;
+        UpdateAmmo.Invoke(currentAmmoCount);
         Invoke("ResetGunAttack", gunAttackCooldown);
     }
 
@@ -228,6 +237,11 @@ public class PlayerAbilities : MonoBehaviour
     {
         playerMovement.SetPlayerState(PlayerState.Idle); // Reset player state to idle after attack
         appliedKnockback = false; // Reset knockback application for the next attack
+    }
+
+    public void RestoreAmmo(int ammo)
+    {
+        currentAmmoCount += ammo;
     }
 
 

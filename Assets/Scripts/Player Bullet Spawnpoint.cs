@@ -25,8 +25,7 @@ public class PlayerBulletSpawnpoint : MonoBehaviour
     public void SpawnBullet(float bulletSpeed)
     {
         GameObject bullet = bulletPool.Get();
-        bullet.transform.position = transform.position;
-        bullet.transform.rotation = transform.rotation;
+        bullet.GetComponent<BulletScript>().SetBulletSpawn(transform.position, transform.rotation);
         bullet.GetComponent<BulletScript>().SetBulletSpeed(bulletSpeed);
 
         bullet.GetComponent<BulletScript>().SetPool(bulletPool);
@@ -34,7 +33,13 @@ public class PlayerBulletSpawnpoint : MonoBehaviour
 
     public void ChangeSpawn(Vector2 newPosition, Quaternion newRotation)
     {
-        transform.position = newPosition;
-        transform.rotation = newRotation;
+        transform.localPosition = newPosition;
+        transform.localRotation = newRotation;
+    }
+
+    private void OnDrawGizmos2D()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, .5f);
     }
 }
