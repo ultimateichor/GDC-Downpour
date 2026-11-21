@@ -314,6 +314,11 @@ public class PlayerMovement : MonoBehaviour
         return lookDirection;
     }
 
+    public PlayerState GetPlayerState()
+    {
+        return currentState;
+    }
+
     public bool WasMovingRight()
     {
         return wasMovingRight;

@@ -89,8 +89,31 @@ public class PlayerAbilities : MonoBehaviour
     private void Update()
     {
         lookDirection = playerMovement.GetLookDirection();
+        currentState = playerMovement.GetPlayerState();
         // apply knockback if melee attack is successful
         if (meleeAttackHitbox.gameObject.activeSelf && meleeAttackHitbox.IsHittingSomething() && !appliedKnockback)
+        {
+            if (lookDirection == LookDirection.Right || lookDirection == LookDirection.UpRight || lookDirection == LookDirection.DownRight)
+            {
+                playerMovement.ApplyKnockback(knockbackForce, Vector2.left);
+            }
+            else if (lookDirection == LookDirection.Left || lookDirection == LookDirection.UpLeft || lookDirection == LookDirection.DownLeft)
+            {
+                playerMovement.ApplyKnockback(knockbackForce, Vector2.right);
+            }
+            else if (lookDirection == LookDirection.Up)
+            {
+                playerMovement.ApplyKnockback(knockbackForce, Vector2.down);
+            }
+            else if (lookDirection == LookDirection.Down)
+            {
+                playerMovement.ApplyKnockback(knockbackForce, Vector2.up);
+            }
+            appliedKnockback = true;
+            //Debug.Log(lookDirection);
+        }
+
+        if (currentState == PlayerState.Shooting && !appliedKnockback)
         {
             if (lookDirection == LookDirection.Right || lookDirection == LookDirection.UpRight || lookDirection == LookDirection.DownRight)
             {
