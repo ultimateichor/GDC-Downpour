@@ -1733,7 +1733,7 @@ MonoBehaviour:
   meleeColliderUpwardOffset: {x: 0, y: 0.9}
   meleeColliderDownwardOffset: {x: 0, y: -0.9}
   gunAttackCooldown: 0.5
-  bulletSpeed: 10
+  bulletSpeed: 20
   maxAmmoCount: 10
   gunSpawnRightOffset: {x: 0.8, y: 0.25}
   gunSpawnLeftOffset: {x: -0.8, y: 0.25}
